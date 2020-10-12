@@ -1,0 +1,116 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="http://www.itxst.com/package/jquery-3.3.1/jquery.js"></script>
+    <link href="http://www.itxst.com/package/bootstrap-4.3.1/css/bootstrap.css" rel="stylesheet" />
+    <link href="http://www.itxst.com/package/bootstrap-table-1.15.3/bootstrap-table.css" rel="stylesheet" />
+    <script src="http://www.itxst.com/package/bootstrap-table-1.15.3/bootstrap-table.js"></script>
+    <title>单词列表</title>
+
+    <style>
+        .table-demo {
+            width: 80%;
+            margin-left: 0px;
+        }
+        .fixed-table-header table  {
+            border-top: solid 0px #ddd !important;
+            margin-top:-1px;
+        }
+        table.class_selector td{
+   padding:0px !important;
+}
+    </style>
+</head>
+<body>
+
+
+<script type="text/javascript">
+
+
+
+</script>
+
+<input type="button" value="开始" onclick="javascript:start_speech();">
+<input type="button" value="停止" onclick="javascript:stop_speech();">
+
+
+<div class="table-demo">
+        <table id="table"></table>
+</div>
+
+    <script type="text/javascript">
+        var word_index = 0;
+        var timer;
+
+        function start_speech() {
+            timer = setInterval(function(){
+                var word_item = words[word_index]
+
+                var utterThis = new window.SpeechSynthesisUtterance(word_item.word);
+                window.speechSynthesis.speak(utterThis);
+
+                if (word_index > 0){
+                    $('#table').bootstrapTable('uncheck', word_index-1);
+                }
+                $('#table').bootstrapTable('check', word_index);
+
+                if (word_index > 3){
+
+                    $('#table').bootstrapTable('scrollTo',{unit: 'rows', value: word_index-3});
+                }
+
+                word_index++;
+            },2000);
+        }
+
+        function stop_speech() {
+            clearInterval(timer)
+        }
+
+
+
+        var words = {{ words|safe }};
+
+    $('#table').bootstrapTable({
+        striped: true,                      //是否显示行间隔色
+        height:500,
+        columns: [{
+           checkbox:true
+        },{
+            field: 'word',
+            title: '单词'
+        },{
+            field: 'transfer',
+            title: '释义'
+        }],
+        data: words,
+        onClickRow:function (row,$element,field) {
+
+            $('.info').removeClass('info');
+            $($element).addClass('info');
+
+            $.ajax({
+                type:"POST",
+                url: "http://127.0.0.1:8000/grasp/",
+                data: {
+                    word: row.word,
+                },
+                success: function (data) {
+                    console.log(data)
+                }
+            })
+	    },
+        onScrollBody:function()
+        {
+          console.log("你滚动了表格滚动条");
+        }
+    });
+
+</script>
+
+</body>
+</html>
